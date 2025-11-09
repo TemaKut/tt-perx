@@ -3,9 +3,12 @@
 
 package factory
 
-import "github.com/google/wire"
+import (
+	"github.com/TemaKut/tt-perx/internal/app/config"
+	"github.com/google/wire"
+)
 
-func InitApp() (*App, func(), error) {
+func InitApp(cfg *config.Config) (*App, func(), error) {
 	panic(
 		wire.Build(
 			AppSet,

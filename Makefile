@@ -1,5 +1,5 @@
 run:
-	go run ./cmd/main.go
+	go run ./cmd --n_parallel_tasks=3
 
 
 gen.wire:

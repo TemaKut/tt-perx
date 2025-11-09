@@ -9,7 +9,6 @@ import (
 
 var AppSet = wire.NewSet(
 	ProvideApp,
-	config.NewConfig,
 	ProvideLogger,
 )
 

@@ -11,14 +11,23 @@ type ArithmeticProgressionTaskAdd struct {
 }
 
 type ArithmeticProgressionTask struct {
-	QueueSeqNumber  uint64     `json:"queue_seq_number"` // Порядковый номер в очереди
-	NElements       uint64     `json:"n"`
-	Delta           float64    `json:"d"`
-	StartElement    float64    `json:"n1"`
-	IterIntervalSec float64    `json:"I"`
-	ResultTTLSec    float64    `json:"TTL"`
-	ActualIter      uint64     `json:"actual_iter"`
-	CreatedAt       time.Time  `json:"created_at"`
-	StartedAt       *time.Time `json:"started_at"`
-	FinishedAt      *time.Time `json:"finished_at"`
+	QueueSeqNumber  uint64                          `json:"queue_seq_number"` // Порядковый номер в очереди
+	NElements       uint64                          `json:"n"`
+	Delta           float64                         `json:"d"`
+	StartElement    float64                         `json:"n1"`
+	IterIntervalSec float64                         `json:"I"`
+	ResultTTLSec    float64                         `json:"TTL"`
+	ActualIter      uint64                          `json:"actual_iter"`
+	Status          ArithmeticProgressionTaskStatus `json:"status"`
+	CreatedAt       time.Time                       `json:"created_at"`
+	StartedAt       *time.Time                      `json:"started_at"`
+	FinishedAt      *time.Time                      `json:"finished_at"`
 }
+
+type ArithmeticProgressionTaskStatus = string
+
+const (
+	ArithmeticProgressionTaskStatusInQueue    = "in_queue"
+	ArithmeticProgressionTaskStatusInProgress = "in_progress"
+	ArithmeticProgressionTaskStatusFinished   = "finished"
+)

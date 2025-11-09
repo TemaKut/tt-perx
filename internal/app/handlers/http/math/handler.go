@@ -41,18 +41,3 @@ func encodeArithmeticProgressionTasks(tasks []mathdto.ArithmeticProgressionTask)
 
 	return result
 }
-
-func encodeArithmeticProgressionTask(task mathdto.ArithmeticProgressionTask) structs.ArithmeticProgressionTask {
-	return structs.ArithmeticProgressionTask{
-		QueueSeqNumber:  task.QueueSeqNumber,
-		NElements:       task.NElements,
-		Delta:           task.Delta,
-		StartElement:    task.StartElement,
-		IterIntervalSec: task.IterInterval.Seconds(),
-		ResultTTLSec:    task.ResultTTL.Seconds(),
-		ActualIter:      task.ActualIter,
-		CreatedAt:       task.CreatedAt,
-		StartedAt:       task.StartedAt,
-		FinishedAt:      task.FinishedAt,
-	}
-}

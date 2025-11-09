@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/TemaKut/tt-perx/cmd/factory"
+	"github.com/TemaKut/tt-perx/internal/app/config"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -12,13 +13,23 @@ import (
 
 func main() {
 	app := cli.App{
-		// TODO name app and param
+		Flags: []cli.Flag{
+			&cli.UintFlag{
+				Name: CliFlagNParallelTasks,
+			},
+		},
 
 		Action: func(c *cli.Context) error {
 			ctx, cancel := signal.NotifyContext(c.Context, syscall.SIGINT, syscall.SIGTERM)
 			defer cancel()
 
-			_, cleanup, err := factory.InitApp()
+			cfg := config.NewConfig()
+
+			if v := c.Uint(CliFlagNParallelTasks); v > 0 {
+				cfg.Service.Math.NParallelTasks = v
+			}
+
+			_, cleanup, err := factory.InitApp(cfg)
 			if cleanup != nil {
 				defer cleanup()
 			}

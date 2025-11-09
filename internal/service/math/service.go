@@ -10,17 +10,20 @@ import (
 type Service struct {
 	storage Storage
 
-	tasksCh chan *mathmodels.ArithmeticProgressionTask
+	nParallelTasks uint
 
 	wg     sync.WaitGroup
 	doneCh chan struct{}
+
+	logger Logger
 }
 
-func NewService(storage Storage, ) *Service {
+func NewService(storage Storage, logger Logger, nParallelTasks uint) *Service {
 	svc := &Service{
-		storage: storage,
-		tasksCh: make(chan *mathmodels.ArithmeticProgressionTask, 3), // TODO 3 -> cmd arg
-		doneCh:  make(chan struct{}),
+		storage:        storage,
+		nParallelTasks: nParallelTasks,
+		doneCh:         make(chan struct{}),
+		logger:         logger,
 	}
 
 	svc.startHandleTasks()
@@ -29,27 +32,63 @@ func NewService(storage Storage, ) *Service {
 }
 
 func (s *Service) startHandleTasks() {
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
-		for {
-			select {
-			case <-s.doneCh:
-			default:
-				tasks := s.storage.Tasks(mathmodels.ArithmeticProgressionTaskStatusInQueue, 3) // TODO 3 -> cmd arg
-				if len(tasks) == 0 {
-					time.Sleep(time.Millisecond * 100)
-				}
+	for range s.nParallelTasks {
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			tasksCh := s.storage.SubscribeOnTasks()
 
-				for _, task := range tasks {
-					select {
-					case s.tasksCh <- task:
-					case <-s.doneCh:
-					}
+			for {
+				select {
+				case <-s.doneCh:
+					return
+				case task := <-tasksCh:
+					s.handleTask(task)
 				}
 			}
+		}()
+	}
+}
+
+func (s *Service) handleTask(task *mathmodels.ArithmeticProgressionTask) {
+	s.logger.Debugf("start handle task")
+	defer func() { s.logger.Debugf("stop handle task") }()
+
+	task.MarkInProgress()
+
+	// INFO: можно хранить лишь последний элемент и количество так как в задаче нигде не используется результат прогрессии.
+	// Оставил чтобы была возможность посмотреть результат заполнения в дебаггере
+	progressionResult := make([]float64, 0, task.NElements())
+	progressionResult = append(progressionResult, task.StartElement())
+
+	if task.NElements() <= uint64(len(progressionResult)) {
+		task.MarkFinished()
+
+		return
+	}
+
+	ticker := time.NewTicker(task.IterInterval())
+	defer ticker.Stop()
+
+loop:
+	for {
+		task.SetActualIter(task.ActualIter() + 1)
+
+		select {
+		case <-s.doneCh:
+			return
+		case <-ticker.C:
+			lastElement := progressionResult[len(progressionResult)-1]
+			progressionResult = append(progressionResult, lastElement+task.Delta())
+
+			if task.NElements() <= uint64(len(progressionResult)) {
+				break loop
+			}
 		}
-	}()
+
+	}
+
+	task.MarkFinished()
 }
 
 func (s *Service) AddArithmeticProgressionTask(params mathdto.AddArithmeticProgressionTaskParams) {
@@ -61,8 +100,6 @@ func (s *Service) AddArithmeticProgressionTask(params mathdto.AddArithmeticProgr
 		params.ResultTTL,
 	)
 
-	task.SetStatus(mathmodels.ArithmeticProgressionTaskStatusInQueue)
-
 	s.storage.PushTask(task)
 }
 
@@ -73,5 +110,4 @@ func (s *Service) ArithmeticProgressionTasks() []mathdto.ArithmeticProgressionTa
 func (s *Service) Close() {
 	close(s.doneCh)
 	s.wg.Wait()
-	close(s.tasksCh)
 }

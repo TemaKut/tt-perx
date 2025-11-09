@@ -20,6 +20,7 @@ func encodeArithmeticProgressionTask(task *mathmodels.ArithmeticProgressionTask)
 		QueueSeqNumber: task.QueueSeqNumber(),
 		NElements:      task.NElements(),
 		Delta:          task.Delta(),
+		Status:         encodeArithmeticProgressionTaskStatus(task.Status()),
 		StartElement:   task.StartElement(),
 		IterInterval:   task.IterInterval(),
 		ResultTTL:      task.ResultTTL(),
@@ -27,5 +28,18 @@ func encodeArithmeticProgressionTask(task *mathmodels.ArithmeticProgressionTask)
 		CreatedAt:      task.CreatedAt(),
 		StartedAt:      task.StartedAt(),
 		FinishedAt:     task.FinishedAt(),
+	}
+}
+
+func encodeArithmeticProgressionTaskStatus(
+	status mathmodels.ArithmeticProgressionTaskStatus,
+) mathdto.ArithmeticProgressionTaskStatus {
+	switch status {
+	case mathmodels.ArithmeticProgressionTaskStatusInQueue, mathmodels.ArithmeticProgressionTaskStatusWaitToStartProcess:
+		return mathdto.ArithmeticProgressionTaskStatusInQueue
+	case mathmodels.ArithmeticProgressionTaskStatusInProgress:
+		return mathdto.ArithmeticProgressionTaskStatusInProgress
+	default:
+		return mathdto.ArithmeticProgressionTaskStatusFinished
 	}
 }

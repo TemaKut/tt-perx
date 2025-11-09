@@ -1,12 +1,14 @@
 package mathmodels
 
-import "time"
+import (
+	"time"
+)
 
 type ArithmeticProgressionTaskStatus int8
 
 const (
-	ArithmeticProgressionTaskStatusUnknown ArithmeticProgressionTaskStatus = iota
-	ArithmeticProgressionTaskStatusInQueue
+	ArithmeticProgressionTaskStatusInQueue ArithmeticProgressionTaskStatus = iota
+	ArithmeticProgressionTaskStatusWaitToStartProcess
 	ArithmeticProgressionTaskStatusInProgress
 	ArithmeticProgressionTaskStatusFinished
 )
@@ -39,6 +41,8 @@ func NewArithmeticProgressionTask(
 		startElement: startElement,
 		iterInterval: iterInterval,
 		resultTTL:    resultTTL,
+		status:       ArithmeticProgressionTaskStatusInQueue,
+		createdAt:    time.Now(),
 	}
 }
 
@@ -46,6 +50,7 @@ func (a *ArithmeticProgressionTask) QueueSeqNumber() uint64 {
 	return a.queueSeqNumber
 }
 
+// TODO подумать по хорошему вычисляемый аттрибут
 func (a *ArithmeticProgressionTask) SetQueueSeqNumber(queueSeqNumber uint64) {
 	a.queueSeqNumber = queueSeqNumber
 }
@@ -54,48 +59,24 @@ func (a *ArithmeticProgressionTask) Status() ArithmeticProgressionTaskStatus {
 	return a.status
 }
 
-func (a *ArithmeticProgressionTask) SetStatus(status ArithmeticProgressionTaskStatus) {
-	a.status = status
-}
-
 func (a *ArithmeticProgressionTask) NElements() uint64 {
 	return a.nElements
-}
-
-func (a *ArithmeticProgressionTask) SetNElements(nElements uint64) {
-	a.nElements = nElements
 }
 
 func (a *ArithmeticProgressionTask) Delta() float64 {
 	return a.delta
 }
 
-func (a *ArithmeticProgressionTask) SetDelta(delta float64) {
-	a.delta = delta
-}
-
 func (a *ArithmeticProgressionTask) StartElement() float64 {
 	return a.startElement
-}
-
-func (a *ArithmeticProgressionTask) SetStartElement(startElement float64) {
-	a.startElement = startElement
 }
 
 func (a *ArithmeticProgressionTask) IterInterval() time.Duration {
 	return a.iterInterval
 }
 
-func (a *ArithmeticProgressionTask) SetIterInterval(iterInterval time.Duration) {
-	a.iterInterval = iterInterval
-}
-
 func (a *ArithmeticProgressionTask) ResultTTL() time.Duration {
 	return a.resultTTL
-}
-
-func (a *ArithmeticProgressionTask) SetResultTTL(resultTTL time.Duration) {
-	a.resultTTL = resultTTL
 }
 
 func (a *ArithmeticProgressionTask) ActualIter() uint64 {
@@ -110,22 +91,32 @@ func (a *ArithmeticProgressionTask) CreatedAt() time.Time {
 	return a.createdAt
 }
 
-func (a *ArithmeticProgressionTask) SetCreatedAt(createdAt time.Time) {
-	a.createdAt = createdAt
-}
-
 func (a *ArithmeticProgressionTask) StartedAt() *time.Time {
 	return a.startedAt
-}
-
-func (a *ArithmeticProgressionTask) SetStartedAt(startedAt *time.Time) {
-	a.startedAt = startedAt
 }
 
 func (a *ArithmeticProgressionTask) FinishedAt() *time.Time {
 	return a.finishedAt
 }
 
-func (a *ArithmeticProgressionTask) SetFinishedAt(finishedAt *time.Time) {
-	a.finishedAt = finishedAt
+func (a *ArithmeticProgressionTask) MarkWaitProcess() {
+	a.status = ArithmeticProgressionTaskStatusWaitToStartProcess
+}
+
+func (a *ArithmeticProgressionTask) MarkInProgress() {
+	a.status = ArithmeticProgressionTaskStatusInProgress
+	a.startedAt = toPtr(time.Now())
+}
+
+func (a *ArithmeticProgressionTask) MarkFinished() {
+	a.status = ArithmeticProgressionTaskStatusFinished
+	a.finishedAt = toPtr(time.Now())
+}
+
+func (a *ArithmeticProgressionTask) IsResultTTLExpired() bool {
+	if a.finishedAt == nil {
+		return false
+	}
+
+	return time.Since(*a.finishedAt) > a.resultTTL
 }

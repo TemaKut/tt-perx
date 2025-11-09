@@ -7,6 +7,14 @@ import (
 )
 
 var StorageSet = wire.NewSet(
-	mathstore.NewQueue,
+	ProvideQueue,
 	wire.Bind(new(mathsvc.Storage), new(*mathstore.Queue)),
 )
+
+func ProvideQueue() (*mathstore.Queue, func()) {
+	queue := mathstore.NewQueue()
+
+	return queue, func() {
+		queue.Close()
+	}
+}

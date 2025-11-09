@@ -2,6 +2,7 @@
   <configuration default="false" name="TT-perx" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="tt-perx" />
     <working_directory value="$PROJECT_DIR$" />
+    <parameters value="--n_parallel_tasks=4" />
     <kind value="PACKAGE" />
     <package value="github.com/TemaKut/tt-perx/cmd" />
     <directory value="$PROJECT_DIR$" />

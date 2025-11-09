@@ -9,28 +9,29 @@ package factory
 import (
 	"github.com/TemaKut/tt-perx/internal/app/config"
 	"github.com/TemaKut/tt-perx/internal/app/handlers/http/math"
-	"github.com/TemaKut/tt-perx/internal/service/math"
-	"github.com/TemaKut/tt-perx/internal/storage/math"
 )
 
 // Injectors from wire.go:
 
-func InitApp() (*App, func(), error) {
-	configConfig := config.NewConfig()
-	logger, err := ProvideLogger(configConfig)
+func InitApp(cfg *config.Config) (*App, func(), error) {
+	logger, err := ProvideLogger(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
-	queue := mathstore.NewQueue()
-	service := mathsvc.NewService(queue)
+	queue, cleanup := ProvideQueue()
+	service, cleanup2 := ProvideMathService(cfg, queue, logger)
 	handler := math.NewHandler(service)
-	httpServer, cleanup, err := ProvideHttpServer(configConfig, handler, logger)
+	httpServer, cleanup3, err := ProvideHttpServer(cfg, handler, logger)
 	if err != nil {
+		cleanup2()
+		cleanup()
 		return nil, nil, err
 	}
 	httpProvider := ProvideHttpProvider(httpServer)
-	app, cleanup2 := ProvideApp(logger, httpProvider)
+	app, cleanup4 := ProvideApp(logger, httpProvider)
 	return app, func() {
+		cleanup4()
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
