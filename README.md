@@ -29,14 +29,6 @@ Cli - для передачи аргументов cmd используется 
 # Примеры тестовых запросов
 
 
-`curl --location 'http://localhost:8000/math/arithmetic-progression/tasks/add' \
---header 'Content-Type: application/json' \
---data '{
-  "n": 10,
-  "d": 10,
-  "n1": 3,
-  "I": 3.1,
-  "TTL": 4
-}'`
+`curl -X POST --location 'http://localhost:8000/math/arithmetic-progression/tasks/add' --header 'Content-Type: application/json' --data '{ "n": 10, "d": 10, "n1": 3, "I": 3.1, "TTL": 4 }' `
 
 `curl --location 'http://localhost:8000/math/arithmetic-progression/tasks'`
